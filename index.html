@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PoultryTrack</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d47a1">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/4866/4866870.png">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --text: #e0e0e0;
+      --text-muted: #aaaaaa;
+      --primary: #1e88e5;
+      --primary-dark: #1565c0;
+      --border: #333;
+      --input: #252525;
+      --success: #2e7d32;
+      --success-dark: #1b5e20;
+      --result-bg: #1a2d1a;
+      --result-border: #2e7d32;
+      --danger: #b71c1c;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Poppins', sans-serif; background: linear-gradient(135deg, #0a2647, #1e3a5f); color: var(--text); min-height: 100vh; padding: 15px; line-height: 1.6; }
+    .container { max-width: 420px; width: 100%; margin: 20px auto; background: var(--card); border-radius: 18px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); overflow: hidden; }
+    h2 { text-align: center; color: #90caf9; font-size: 1.4rem; padding: 20px 15px 15px; background: #0d47a1; margin: 0; font-weight: 600; }
+    .form { padding: 20px; }
+    label { font-weight: 600; display: block; margin-top: 14px; color: var(--text-muted); font-size: 0.95rem; }
+    input { width: 100%; padding: 11px 12px; margin-top: 6px; border-radius: 10px; border: 1px solid var(--border); background: var(--input); color: var(--text); font-size: 1rem; transition: all 0.3s ease; }
+    input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.3); background: #2a2a2a; }
+    button { margin-top: 22px; width: 100%; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: 0.3s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+    button:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    button:disabled { background: #555; cursor: not-allowed; }
+    .result { margin-top: 25px; background: var(--result-bg); padding: 18px; border-radius: 12px; border: 1px solid var(--result-border); display: none; white-space: pre-line; font-family: 'Courier New', monospace; font-size: 0.95rem; color: #c8e6c9; line-height: 1.7; }
+    #copyBtn { background: var(--success); display: none; margin-top: 15px; }
+    #saveBtn { background: var(--primary); display: none; margin-top: 15px; }
+    
+    /* Sync Status Styling */
+    #statusContainer { text-align: center; margin-top: 15px; font-size: 13px; color: #90caf9; font-weight: 500; background: rgba(144, 202, 249, 0.1); padding: 10px; border-radius: 10px; border: 1px dashed #90caf9; display: none; }
+
+    footer { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px; padding: 15px 0; }
+    footer a { color: #90caf9; text-decoration: none; font-weight: 500; }
+    @media (max-width: 480px) { .container { margin: 10px auto; border-radius: 14px; } h2 { font-size: 1.25rem; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>PoultryTrack</h2>
+    <div class="form">
+      <label>1. Farmer Name:</label>
+      <input type="text" id="farmerName" placeholder="Enter farmer name" list="farmer-list">
+      <datalist id="farmer-list">
+        <option value="Aberathna"><option value="Ajith Premalal"><option value="Asanka"><option value="Chandana"><option value="Chandralatha"><option value="Chathuranga"><option value="Dammika"><option value="Dinesh"><option value="Ileiraja"><option value="Illiyars"><option value="Janitha"><option value="Jayakodi"><option value="K.K.G"><option value="Lalith"><option value="Layanal"><option value="Leo"><option value="Lidapitiya"><option value="Mahinda"><option value="Mahesh"><option value="Malkanthi"><option value="Manoharan"><option value="Murthi"><option value="Nalaka"><option value="Neel"><option value="Nimal"><option value="Nishantha"><option value="Nusra"><option value="Parkyaraj"><option value="Premarathna"><option value="Rilwan"><option value="Riyas"><option value="Sachin"><option value="Sanjeewa"><option value="Santhabandara"><option value="Sarath"><option value="Shanaka"><option value="Siril"><option value="Siriwardana"><option value="Sunanda"><option value="Susantha"><option value="Thusitha"><option value="Thushara"><option value="Tikiri"><option value="Ukkubanda"><option value="Upali"><option value="W.M.Premasiri"><option value="Wijepala"><option value="Wijeshantha"><option value="Wishwanadan 1200"><option value="Wishwanadan 2200"><option value="Ziyard">
+      </datalist>
+
+      <label>2. Total Animals:</label>
+      <input type="number" id="totalAnimals" placeholder="Enter total animals">
+      <label>3. Date Received:</label>
+      <input type="date" id="dateReceived">
+      <label>4. Today:</label>
+      <input type="date" id="todayDate">
+      <label>5. Dead Animals:</label>
+      <input type="number" id="deadAnimals" placeholder="Enter dead count">
+      <label>6. Feed Intake (kg):</label>
+      <input type="number" id="feedIntake" step="0.01" placeholder="Enter feed intake">
+      <label>7. No. of Weighed Animals:</label>
+      <input type="number" id="weighedAnimals" placeholder="Enter weighed count">
+      <label>8. Total Weight (kg):</label>
+      <input type="number" id="totalWeight" step="0.01" placeholder="Enter total weight">
+
+      <button onclick="calculateData()">Calculate Results</button>
+
+      <div class="result" id="resultBox">
+        <span id="resultText"></span>
+      </div>
+
+      <button id="copyBtn" onclick="copyResults()">Copy Results</button>
+      <button id="saveBtn" onclick="saveToSheet()">Save to Sheet</button>
+
+      <div id="statusContainer">🔄 Pending to Sync: <span id="pendingCount">0</span></div>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 <strong>Gayan Dilshan</strong> | Powered by <a href="https://www.Gedlix.com" target="_blank">Gedlix</a>
+  </footer>
+
+  <script>
+    document.getElementById("todayDate").value = new Date().toISOString().split('T')[0];
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxigQEi5Lgq6MMmmEQqwggC-5mRW9t6R_WIBvyqtJCs-UonPO87YNAQreJxZHl746nu/exec";
+    let db;
+
+    // 1. IndexedDB Setup
+    const request = indexedDB.open('PoultryTrackDB', 1);
+    request.onupgradeneeded = (e) => {
+      e.target.result.createObjectStore('pendingData', { autoIncrement: true });
+    };
+    request.onsuccess = (e) => {
+      db = e.target.result;
+      updatePendingCount();
+      syncData();
+    };
+
+    function sanitize(str) { return str.replace(/[<>'"&]/g, ''); }
+
+    function calculateData() {
+      const farmerName = sanitize(document.getElementById("farmerName").value.trim());
+      const totalAnimals = parseFloat(document.getElementById("totalAnimals").value);
+      const dateReceived = new Date(document.getElementById("dateReceived").value);
+      const todayDate = new Date(document.getElementById("todayDate").value);
+      const deadAnimals = parseFloat(document.getElementById("deadAnimals").value) || 0;
+      const feedIntake = parseFloat(document.getElementById("feedIntake").value);
+      const weighedAnimals = parseFloat(document.getElementById("weighedAnimals").value);
+      const totalWeight = parseFloat(document.getElementById("totalWeight").value);
+
+      if (!farmerName || !totalAnimals || isNaN(feedIntake) || isNaN(weighedAnimals) || isNaN(totalWeight)) {
+        alert("Please fill all required fields correctly!");
+        return;
+      }
+
+      const ageDays = Math.ceil(Math.abs(todayDate - dateReceived) / (1000 * 60 * 60 * 24));
+      const liveBirds = totalAnimals - deadAnimals;
+      const avgWeight = totalWeight / weighedAnimals;
+      const feedPerBird = (feedIntake * 50) / liveBirds;
+      const fcr = (feedIntake * 50) / (liveBirds * avgWeight);
+
+      const resultText = `FARMER NAME: ${farmerName}\nDATE: ${todayDate.toISOString().split('T')[0]}\nFLOCK SIZE: ${totalAnimals}\nAGE (Days): ${ageDays} days\nMORTALITY: ${deadAnimals}\nFEED INTAKE / BIRD: ${feedPerBird.toFixed(3)} kg\nAVERAGE WEIGHT (kg): ${avgWeight.toFixed(3)} kg\nFCR: ${isFinite(fcr) ? (Math.floor(fcr * 100) / 100).toFixed(2) : 'N/A'}`;
+
+      document.getElementById("resultText").textContent = resultText;
+      document.getElementById("resultBox").style.display = "block";
+      document.getElementById("copyBtn").style.display = "block";
+      document.getElementById("saveBtn").style.display = "block";
+      document.getElementById("saveBtn").disabled = false;
+      document.getElementById("saveBtn").textContent = "Save to Sheet";
+      document.getElementById("resultBox").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function saveToSheet() {
+      const text = document.getElementById("resultText").textContent;
+      const btn = document.getElementById("saveBtn");
+      btn.textContent = "Processing...";
+      btn.disabled = true;
+
+      if (navigator.onLine) {
+        sendToGoogle(text);
+      } else {
+        saveOffline(text);
+      }
+    }
+
+    function sendToGoogle(text) {
+      fetch(WEB_APP_URL, {
+        method: 'POST',
+        body: text,
+        mode: 'no-cors'
+      }).then(() => {
+        alert("Saved Online!");
+        document.getElementById("saveBtn").textContent = "Saved!";
+      }).catch(() => saveOffline(text));
+    }
+
+    function saveOffline(text) {
+      const tx = db.transaction(['pendingData'], 'readwrite');
+      tx.objectStore('pendingData').add(text);
+      tx.oncomplete = () => {
+        alert("Offline: Saved locally!");
+        updatePendingCount();
+        document.getElementById("saveBtn").textContent = "Saved Offline";
+      };
+    }
+
+    function syncData() {
+      if (!navigator.onLine || !db) return;
+      const tx = db.transaction(['pendingData'], 'readwrite');
+      const store = tx.objectStore('pendingData');
+      store.openCursor().onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor) {
+          fetch(WEB_APP_URL, { method: 'POST', body: cursor.value, mode: 'no-cors' })
+          .then(() => {
+            const delTx = db.transaction(['pendingData'], 'readwrite');
+            delTx.objectStore('pendingData').delete(cursor.key);
+            delTx.oncomplete = () => updatePendingCount();
+          });
+          cursor.continue();
+        }
+      };
+    }
+
+    function updatePendingCount() {
+      if (!db) return;
+      const countReq = db.transaction(['pendingData'], 'readonly').objectStore('pendingData').count();
+      countReq.onsuccess = () => {
+        const count = countReq.result;
+        document.getElementById('statusContainer').style.display = count > 0 ? 'block' : 'none';
+        document.getElementById('pendingCount').innerText = count;
+      };
+    }
+
+    window.addEventListener('online', syncData);
+
+    function copyResults() {
+      navigator.clipboard.writeText(document.getElementById("resultText").textContent).then(() => {
+        const btn = document.getElementById("copyBtn");
+        btn.textContent = "Copied!";
+        setTimeout(() => btn.textContent = "Copy Results", 1500);
+      });
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js'); });
+    }
+  </script>
+</body>
+</html>
