@@ -41,7 +41,7 @@
     #copyBtn { background: var(--success); display: none; margin-top: 15px; }
     #saveBtn { background: var(--primary); display: none; margin-top: 15px; }
     
-    /* Sync Status Styling - වඩාත් පැහැදිලිව පෙනෙන ලෙස සකසා ඇත */
+    /* Sync Status Styling */
     #statusContainer { text-align: center; margin-top: 20px; font-size: 14px; color: #90caf9; font-weight: bold; background: rgba(144, 202, 249, 0.1); padding: 12px; border-radius: 10px; border: 1px dashed #90caf9; display: none; }
 
     footer { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px; padding: 15px 0; }
@@ -155,11 +155,8 @@
     }
 
     function sendToGoogle(text) {
-      fetch(WEB_APP_URL, {
-        method: 'POST',
-        body: text,
-        mode: 'no-cors'
-      }).then(() => {
+      fetch(WEB_APP_URL, { method: 'POST', body: text, mode: 'no-cors' })
+      .then(() => {
         alert("Saved Online!");
         document.getElementById("saveBtn").textContent = "Saved!";
         updatePendingCount();
@@ -176,35 +173,40 @@
       };
     }
 
-    // --- Sync Function නිවැරදි කිරීම ---
-    function syncData() {
+    // --- SEQUENTIAL SYNC ලොජික් එක (එකින් එක යැවීම) ---
+    async function syncData() {
       if (!navigator.onLine || !db) return;
+
       const tx = db.transaction(['pendingData'], 'readonly');
       const store = tx.objectStore('pendingData');
-      const cursorReq = store.openCursor();
+      
+      const records = await new Promise(res => {
+          store.getAll().onsuccess = (e) => res(e.target.result);
+      });
+      const keys = await new Promise(res => {
+          store.getAllKeys().onsuccess = (e) => res(e.target.result);
+      });
 
-      cursorReq.onsuccess = (e) => {
-        const cursor = e.target.result;
-        if (cursor) {
-          const currentData = cursor.value;
-          const currentKey = cursor.key;
+      if (records.length === 0) return;
 
-          fetch(WEB_APP_URL, { method: 'POST', body: currentData, mode: 'no-cors' })
-          .then(() => {
-            // සාර්ථක වූ පසු දත්තය මකන්න
-            const delTx = db.transaction(['pendingData'], 'readwrite');
-            delTx.objectStore('pendingData').delete(currentKey);
-            
-            // මැකීම අවසන් වූ පසු පමණක් Count එක Update කරන්න
-            delTx.oncomplete = () => {
-              updatePendingCount();
-            };
-          })
-          .catch(err => console.log("Sync Error:", err));
-
-          cursor.continue();
+      for (let i = 0; i < records.length; i++) {
+        try {
+          await fetch(WEB_APP_URL, { method: 'POST', body: records[i], mode: 'no-cors' });
+          
+          const delTx = db.transaction(['pendingData'], 'readwrite');
+          await new Promise(res => {
+              delTx.objectStore('pendingData').delete(keys[i]).onsuccess = res;
+          });
+          
+          updatePendingCount();
+          // Google Script එකට දත්ත සකසන්න තත්පර බාගයක විරාමයක්
+          await new Promise(r => setTimeout(r, 500)); 
+          
+        } catch (err) {
+          console.log("Sync failed for record", i);
+          break; // එකක් පේල් වුනොත් loop එක නවත්වන්න
         }
-      };
+      }
     }
 
     function updatePendingCount() {
@@ -214,7 +216,6 @@
         const count = countReq.result;
         const statusBox = document.getElementById('statusContainer');
         const countLabel = document.getElementById('pendingCount');
-        
         statusBox.style.display = count > 0 ? 'block' : 'none';
         countLabel.innerText = count;
       };
