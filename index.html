@@ -41,8 +41,8 @@
     #copyBtn { background: var(--success); display: none; margin-top: 15px; }
     #saveBtn { background: var(--primary); display: none; margin-top: 15px; }
     
-    /* Sync Status Styling */
-    #statusContainer { text-align: center; margin-top: 15px; font-size: 13px; color: #90caf9; font-weight: 500; background: rgba(144, 202, 249, 0.1); padding: 10px; border-radius: 10px; border: 1px dashed #90caf9; display: none; }
+    /* Sync Status Styling - වඩාත් පැහැදිලිව පෙනෙන ලෙස සකසා ඇත */
+    #statusContainer { text-align: center; margin-top: 20px; font-size: 14px; color: #90caf9; font-weight: bold; background: rgba(144, 202, 249, 0.1); padding: 12px; border-radius: 10px; border: 1px dashed #90caf9; display: none; }
 
     footer { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px; padding: 15px 0; }
     footer a { color: #90caf9; text-decoration: none; font-weight: 500; }
@@ -88,7 +88,7 @@
   </div>
 
   <footer>
-    © 2025 <strong>Gayan Dilshan</strong> | Powered by <a href="https://www.Gedlix.com" target="_blank">Gedlix</a>
+    © 2026 <strong>Gayan Dilshan</strong> | Powered by <a href="https://www.Gedlix.com" target="_blank">Gedlix</a>
   </footer>
 
   <script>
@@ -162,6 +162,7 @@
       }).then(() => {
         alert("Saved Online!");
         document.getElementById("saveBtn").textContent = "Saved!";
+        updatePendingCount();
       }).catch(() => saveOffline(text));
     }
 
@@ -175,19 +176,32 @@
       };
     }
 
+    // --- Sync Function නිවැරදි කිරීම ---
     function syncData() {
       if (!navigator.onLine || !db) return;
-      const tx = db.transaction(['pendingData'], 'readwrite');
+      const tx = db.transaction(['pendingData'], 'readonly');
       const store = tx.objectStore('pendingData');
-      store.openCursor().onsuccess = (e) => {
+      const cursorReq = store.openCursor();
+
+      cursorReq.onsuccess = (e) => {
         const cursor = e.target.result;
         if (cursor) {
-          fetch(WEB_APP_URL, { method: 'POST', body: cursor.value, mode: 'no-cors' })
+          const currentData = cursor.value;
+          const currentKey = cursor.key;
+
+          fetch(WEB_APP_URL, { method: 'POST', body: currentData, mode: 'no-cors' })
           .then(() => {
+            // සාර්ථක වූ පසු දත්තය මකන්න
             const delTx = db.transaction(['pendingData'], 'readwrite');
-            delTx.objectStore('pendingData').delete(cursor.key);
-            delTx.oncomplete = () => updatePendingCount();
-          });
+            delTx.objectStore('pendingData').delete(currentKey);
+            
+            // මැකීම අවසන් වූ පසු පමණක් Count එක Update කරන්න
+            delTx.oncomplete = () => {
+              updatePendingCount();
+            };
+          })
+          .catch(err => console.log("Sync Error:", err));
+
           cursor.continue();
         }
       };
@@ -198,8 +212,11 @@
       const countReq = db.transaction(['pendingData'], 'readonly').objectStore('pendingData').count();
       countReq.onsuccess = () => {
         const count = countReq.result;
-        document.getElementById('statusContainer').style.display = count > 0 ? 'block' : 'none';
-        document.getElementById('pendingCount').innerText = count;
+        const statusBox = document.getElementById('statusContainer');
+        const countLabel = document.getElementById('pendingCount');
+        
+        statusBox.style.display = count > 0 ? 'block' : 'none';
+        countLabel.innerText = count;
       };
     }
 
